@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+
+main() {
+  echo "hi"
+  version=$(latest_named_tag)
+  echo $version
+  update_chart_version $version
+  git_commit
+  helm package chart/
+  push_helm_chart "$APP_NAME" "$version" "$HELM_REGISTRIES"
+}
+
+
+fetch_tags() {
+    curl -s https://hub.docker.com/v2/repositories/library/odoo/tags
+}
+
+latest_digest() {
+    local tag_data="$1"
+
+    # Get the digest for the 'latest' tag
+    local digest
+    digest=$(echo "$tag_data" | jq -r '.results[] | select(.name=="latest") | .digest')
+
+    # Check if we found a digest
+    if [ -z "$digest" ]; then
+        echo "No 'latest' tag found."
+        exit 1
+    fi
+
+    echo "$digest"
+}
+
+tags_for_digest() {
+    local tag_data="$1"
+    local digest="$2"
+    echo "$tag_data" | jq --arg digest "$digest" '.results[] | select(.digest == $digest) | .name'
+}
+
+tag_first_for_date() {
+  local tags=("$@")  # Capture all arguments as an array
+  for tag in "${tags[@]}"; do
+    if [[ "$tag" =~ [0-9]+\.[0-9]+-[0-9]{8} ]]; then
+      echo "$tag" # Return the first matching tag
+      return 0
+    fi
+  done
+
+  echo "No tags found with YYMMDD format."
+  exit 1
+}
+
+latest_named_tag() {
+  # Main logic
+  tag_data=$(fetch_tags)
+  latest_image=$(latest_digest "$tag_data")
+  latest_tags=$(tags_for_digest "$tag_data" "$latest_image")
+  tag=$(tag_first_for_date $latest_tags | tr -d '"')
+  echo $tag
+}
+
+git_commit() {
+  git add -A
+  message=$(get_commit_message)
+  git commit -m "$message"
+}
+
+get_commit_message() {
+  if command -v lazycommit > /dev/null; then
+    lazycommit  commit
+  else
+    echo "autocommit on $(date)"
+  fi
+}
+
+update_chart_version() {
+  appVersion="$1"
+  chartVersion="${appVersion/-/.}"
+
+  sed -i.bak "s/^version: .*/version: \"${chartVersion}\"/" chart/Chart.yaml
+  sed -i.bak "s/^appVersion: .*/appVersion: \"${appVersion}\"/" chart/Chart.yaml
+}
+
+push_helm_chart() {
+  local app_name="$1"
+  local version="$2"
+  local registries="$3"
+  local chart_package="${app_name}-${version}.tgz"
+  for registry in ${registries//,/ }; do
+    if [[ -f "$chart_package" ]]; then
+      helm push $chart_package "oci://$registry" && echo "Pushed Helm chart to ${registry}"
+    else
+      echo "Error: Chart package ${chart_package} not found!" >&2
+    fi
+  done
+}
+
+main
