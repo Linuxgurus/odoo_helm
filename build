@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 
 main() {
-  echo "hi"
   version=$(latest_named_tag)
   echo $version
   update_chart_version $version
   git_commit
-  helm package charts/odoo
-  push_helm_chart "$APP_NAME" "$version" "$HELM_REGISTRIES"
+#  helm package charts/odoo
+#  push_helm_chart "$APP_NAME" "$version" "$HELM_REGISTRIES"
 }
 
 
