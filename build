@@ -6,7 +6,7 @@ main() {
   echo $version
   update_chart_version $version
   git_commit
-  helm package chart/
+  helm package charts/odoo
   push_helm_chart "$APP_NAME" "$version" "$HELM_REGISTRIES"
 }
 
@@ -77,8 +77,8 @@ update_chart_version() {
   appVersion="$1"
   chartVersion="${appVersion/-/.}"
 
-  sed -i.bak "s/^version: .*/version: \"${chartVersion}\"/" chart/Chart.yaml
-  sed -i.bak "s/^appVersion: .*/appVersion: \"${appVersion}\"/" chart/Chart.yaml
+  sed -i.bak "s/^version: .*/version: \"${chartVersion}\"/" charts/odoo/Chart.yaml
+  sed -i.bak "s/^appVersion: .*/appVersion: \"${appVersion}\"/" charts/odoo/Chart.yaml
 }
 
 push_helm_chart() {
