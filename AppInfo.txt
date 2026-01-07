@@ -1,2 +1,1 @@
 APP_NAME=odoo
-HELM_REGISTRIES=harbor.vn.linuxguru.net/linuxguru
