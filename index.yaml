@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  odoo:
+  - apiVersion: v2
+    appVersion: 19.0-20251222
+    created: "2026-01-07T18:30:13.597096001Z"
+    description: A Helm chart for Odoo
+    digest: a16df44090917608a05bb12621831a9c4eb0ed398581d168c1f016c7d414d889
+    name: odoo
+    type: application
+    urls:
+    - https://github.com/Linuxgurus/odoo_helm/releases/download/odoo-19.0.20251222/odoo-19.0.20251222.tgz
+    version: 19.0.20251222
+generated: "2026-01-07T18:30:13.5971006Z"
